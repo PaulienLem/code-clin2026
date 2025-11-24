@@ -1,0 +1,9 @@
+*.csv
+full_semantic_results/
+full_semantic_results/*
+dbbe_semantic_results/
+dbbe_semantic_results/*
+dbbe_orthographic_results/
+dbbe_orthogrpahic_results/*
+full_orthographic_results/
+full_orthographic_results/*
