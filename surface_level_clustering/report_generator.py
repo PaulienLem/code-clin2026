@@ -1,3 +1,6 @@
+import psutil
+import numpy as np
+import logging
 class ReportGenerator:
     def __init__(
         self,
@@ -20,9 +23,6 @@ class ReportGenerator:
         self.format_stage_resources = format_stage_resources_fn
 
     def generate(self):
-        import psutil
-        import numpy as np
-        import logging
         logger = logging.getLogger(__name__)
 
         n_verse_clusters = len(set(self.verse_clusters.values()))
@@ -40,9 +40,7 @@ class ReportGenerator:
         cpu_count_logical = psutil.cpu_count(logical=True)
 
         report = [
-            "="*70,
             "Complete pipeline report",
-            "="*70,
             "\Dataset:",
             f"  Verses: {len(self.df):,}",
             f"  Poems: {self.df['idoriginal_poem'].nunique():,}",
@@ -76,7 +74,6 @@ class ReportGenerator:
             f"  {self.output_dir}/poem_clusters.csv",
             f"  {self.output_dir}/verse_grid_search_results.csv",
             f"  {self.output_dir}/poem_grid_search_results.csv",
-            "="*70
         ]
 
         report_text = "\n".join(report)
