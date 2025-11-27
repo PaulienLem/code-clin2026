@@ -5,7 +5,9 @@ the paper *From Orthography to Semantics: Large-Scale Unsupervised Textual Simil
 which was submitted for the journal 
 [Computational Linguistics in the Netherlands (CLIN)](https://www.clinjournal.org).
 Due to copyright reasons, the full dataset cannot be deployed here, 
-but a small subset of the [Database of Byzantine Book Epigrams](https://www.dbbe.ugent.be) has been included to allow running the DBBE sections of both  `orthographic_similarity.ipynb` and `semantic_similarity.ipynb`. Replacing this file with a different csv following the same structure, should allow running both scripts against other data.
+but a small subset of the [Database of Byzantine Book Epigrams](https://www.dbbe.ugent.be) has been included to allow 
+running the notebooks provided in `ssemantic_clustering` and `surface_level_clustering`. 
+Replacing this file with a different csv following the same structure, should allow running both scripts against other data.
 
 -------
  ## Running the scripts
