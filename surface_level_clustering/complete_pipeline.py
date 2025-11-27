@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class CompletePipeline:
     def __init__(self,
                  csv_path: str,
-                 scratch_dir: str = '/scratch/gent/vo/000/gvo00042/vsc48660',
+                 scratch_dir: str = './temp_files',
                  output_dir: str = './results',
                  num_perms: Optional[List[int]] = None,
                  shingle_sizes: Optional[List[int]] = None,
