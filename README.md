@@ -12,5 +12,4 @@ but a small subset of the [Database of Byzantine Book Epigrams](https://www.dbbe
 
 - Use [virtualenv](https://virtualenv.pypa.io/en/latest/user_guide.html) to generate a virtual **python3.11** environment
 - Install the required dependencies using `pip install -r requirements.txt`
-- Run the "DBBE" section of the `orthographic_similarity.ipynb` script or the `semantic_similarity.ipynb` script. These sections use the small demo dataset included in this repository.
-
+- Run the "DBBE" section of the `orthographic_similarity.ipynb` script or the `semantic_similarity.ipynb` script. These sections use the small demo dataset included in this repository. Note that the semantic similarity script requires a GPU environment. The orthographic similarity notebook can be run on a regular personal computer without GPU. 
