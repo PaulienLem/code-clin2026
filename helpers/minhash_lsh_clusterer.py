@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from .text_preprocessor import TextPreprocessor
-from .shingle_generator import ShingleGenerator
-from .lsh_index import LSHIndex
+from .minhash_shingle_generator import ShingleGenerator
+from .minhash_lsh_index import LSHIndex
 from .similarity_computer import SimilarityComputer
 from .minhash_processor import MinHashProcessor
 from  .union_find import UnionFind

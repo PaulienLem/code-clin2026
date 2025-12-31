@@ -75,9 +75,7 @@ class SystemResourceAnalyzer:
         return data_size > 10000 and self.gpu_memory_gb > 2
 
     def print_summary(self):
-        print("=" * 80)
-        print("SYSTEM RESOURCE ANALYSIS")
-        print("=" * 80)
+        print("System resource analysis")
         print(f"CPU Cores (Physical): {self.cpu_count_physical}")
         print(f"CPU Cores (Logical):  {self.cpu_count_logical}")
         print(f"Total RAM:            {self.total_ram_gb:.2f} GB")
@@ -86,8 +84,6 @@ class SystemResourceAnalyzer:
         if self.has_gpu:
             print(f"GPU Count:            {self.gpu_count}")
             print(f"GPU Memory:           {self.gpu_memory_gb:.2f} GB per GPU")
-        print("=" * 80)
         print(f"Optimal Workers (CPU Intensive):    {self.get_optimal_workers('cpu_intensive')}")
         print(f"Optimal Workers (Memory Intensive): {self.get_optimal_workers('memory_intensive')}")
         print(f"Optimal Workers (I/O Intensive):    {self.get_optimal_workers('io_intensive')}")
-        print("=" * 80)

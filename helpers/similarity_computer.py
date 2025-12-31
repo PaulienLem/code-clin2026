@@ -21,6 +21,7 @@ except ImportError:
     cp = np
     GPU_AVAILABLE = False
     print("No GPU - using NumPy (CPU mode)")
+
 class SimilarityComputer:
     def __init__(self, threshold: float = 0.3, use_gpu: bool = GPU_AVAILABLE):
         self.threshold = threshold
