@@ -9,3 +9,4 @@ from .system_resource_analyzer import SystemResourceAnalyzer
 from .timing_logger import TimingLogger
 from .resource_monitor import ResourceMonitor
 from .performance_reporter import PerformanceReporter
+from .semantic_report_generator import SemanticReportGenerator
