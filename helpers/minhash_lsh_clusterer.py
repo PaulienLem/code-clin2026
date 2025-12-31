@@ -7,8 +7,8 @@ from tqdm import tqdm
 from .text_preprocessor import TextPreprocessor
 from .minhash_shingle_generator import ShingleGenerator
 from .minhash_lsh_index import LSHIndex
-from .similarity_computer import SimilarityComputer
-from .minhash_processor import MinHashProcessor
+from .minhash_match_evaluator import MinHashMatchEvaluator
+from .minhash_signature_generator import MinHashSignatureGenerator
 from  .union_find import UnionFind
 try:
     import cupy as cp
@@ -36,9 +36,9 @@ class MinHashLshClustering:
             remove_diacritics=True
         )
         self.shingler = ShingleGenerator(shingle_size, use_gpu)
-        self.minhash = MinHashProcessor(num_perm, use_gpu)
+        self.minhash = MinHashSignatureGenerator(num_perm, use_gpu)
         self.lsh_index = LSHIndex(threshold, num_perm)
-        self.similarity_computer = SimilarityComputer(threshold, use_gpu)
+        self.similarity_computer = MinHashMatchEvaluator(threshold, use_gpu)
         self.all_similarities = []
 
         mode = "GPU (CuPy)" if self.use_gpu else "CPU (NumPy)"

@@ -21,7 +21,8 @@ except ImportError:
     cp = np
     GPU_AVAILABLE = False
     print("No GPU - using NumPy (CPU mode)")
-class MinHashProcessor:
+
+class MinHashSignatureGenerator:
     def __init__(self, num_perm: int = 128, use_gpu: bool = GPU_AVAILABLE):
         self.num_perm = num_perm
         self.use_gpu = use_gpu and GPU_AVAILABLE

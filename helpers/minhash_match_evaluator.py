@@ -1,18 +1,6 @@
 
-import re
-import time
-import unicodedata
-from collections import Counter, defaultdict
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Set
 
 import numpy as np
-import pandas as pd
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import adjusted_rand_score, v_measure_score
-
 try:
     import cupy as cp
     GPU_AVAILABLE = True
@@ -22,7 +10,7 @@ except ImportError:
     GPU_AVAILABLE = False
     print("No GPU - using NumPy (CPU mode)")
 
-class SimilarityComputer:
+class MinHashMatchEvaluator:
     def __init__(self, threshold: float = 0.3, use_gpu: bool = GPU_AVAILABLE):
         self.threshold = threshold
         self.use_gpu = use_gpu and GPU_AVAILABLE

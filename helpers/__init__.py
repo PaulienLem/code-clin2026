@@ -1,6 +1,6 @@
 from .minhash_lsh_index import LSHIndex
 from .minhash_lsh_clusterer import MinHashLshClustering
-from .minhash_processor import MinHashProcessor
+from .minhash_signature_generator import MinHashSignatureGenerator
 from .minhash_shingle_generator import ShingleGenerator
 from .text_preprocessor import TextPreprocessor
 from .union_find import UnionFind
