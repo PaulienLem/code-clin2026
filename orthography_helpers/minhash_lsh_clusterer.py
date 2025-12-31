@@ -1,19 +1,9 @@
-#%% md
-# 1. DBBE
-#%%
-import re
-import time
-import unicodedata
-from collections import Counter, defaultdict
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Set
 
+import time
+from typing import List, Dict, Tuple, Optional, Set
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import adjusted_rand_score, v_measure_score
 from .text_preprocessor import TextPreprocessor
 from .shingle_generator import ShingleGenerator
 from .lsh_index import LSHIndex
@@ -28,7 +18,7 @@ except ImportError:
     cp = np
     GPU_AVAILABLE = False
     print("No GPU - using NumPy (CPU mode)")
-class FastMinHashClustering:
+class MinHashLshClustering:
     def __init__(self, threshold: float = 0.3, shingle_size: int = 4,
                  num_perm: int = 128, chunk_size: int = 50000,
                  use_gpu: Optional[bool] = None):
