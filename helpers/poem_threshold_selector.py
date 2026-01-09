@@ -1,9 +1,9 @@
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+import os
 import re
 import time
-import unicodedata
 from collections import Counter, defaultdict
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Set
+from numba import njit, cuda
 
 import numpy as np
 import pandas as pd
@@ -12,11 +12,90 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import adjusted_rand_score, v_measure_score
 
+@njit
+def jaccard_numba(a_arr, b_arr):
+    intersection = 0
+    a_set = set(a_arr)
+    b_set = set(b_arr)
+
+    for item in a_set:
+        if item in b_set:
+            intersection += 1
+
+    union = len(a_set) + len(b_set) - intersection
+    if union == 0:
+        return 0.0
+    return intersection / union
+
+@njit
+def count_shared_verses(a_arr, b_arr):
+    shared = 0
+    a_set = set(a_arr)
+    b_set = set(b_arr)
+
+    for item in a_set:
+        if item in b_set:
+            shared += 1
+
+    return shared
+
+class PoemUnionFind:
+    __slots__ = ['parent', 'rank']
+
+    def __init__(self, elements):
+        self.parent = {e: e for e in elements}
+        self.rank = {e: 0 for e in elements}
+
+    def find(self, x):
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        return True
+
+    def get_clusters(self):
+        clusters = defaultdict(set)
+        for elem in self.parent.keys():
+            clusters[self.find(elem)].add(elem)
+        return dict(clusters)
+
+def compute_similarity_batch(args):
+    pairs_batch, poem_to_array_dict, min_shared = args
+
+    results = []
+    for p1, p2 in pairs_batch:
+        arr1 = poem_to_array_dict[p1]
+        arr2 = poem_to_array_dict[p2]
+
+        shared = count_shared_verses(arr1, arr2)
+
+        if shared >= min_shared:
+            sim = jaccard_numba(arr1, arr2)
+            results.append({
+                'poem1': p1,
+                'poem2': p2,
+                'similarity': sim,
+                'shared_verses': shared
+            })
+    return results
+
 class PoemThresholdSelector:
-    def __init__(self, sample_size: int = 15000, random_seed: int = 42, min_shared_verses: int = 1):
+    def __init__(self, timinglogger, resource_monitor, system_analyzer, sample_size: int = 15000, random_seed: int = 42, min_shared_verses: int = 1):
         self.sample_size = sample_size
         self.random_seed = random_seed
         self.min_shared_verses = min_shared_verses
+        self.timing_logger = timinglogger
+        self.resource_monitor = resource_monitor
+        self.system_analyzer = system_analyzer
         np.random.seed(random_seed)
 
     @staticmethod
@@ -57,7 +136,7 @@ class PoemThresholdSelector:
             for poem in sample_poems_in_cluster:
                 poem_potential_matches[poem].update(sample_poems_in_cluster)
 
-        n_workers = system_analyzer.get_optimal_workers('io_intensive')
+        n_workers = self.system_analyzer.get_optimal_workers('io_intensive')
 
         def process_poem_batch(poems_batch):
             local_pairs = set()
@@ -86,8 +165,8 @@ class PoemThresholdSelector:
         if len(pairs_list) == 0:
             return pd.DataFrame()
 
-        n_cores = system_analyzer.get_optimal_workers('cpu_intensive')
-        chunk_size = system_analyzer.get_optimal_chunk_size(len(pairs_list), n_cores)
+        n_cores = self.system_analyzer.get_optimal_workers('cpu_intensive')
+        chunk_size = self.system_analyzer.get_optimal_chunk_size(len(pairs_list), n_cores)
         chunks = [pairs_list[i:i + chunk_size] for i in range(0, len(pairs_list), chunk_size)]
 
         print(f"  Computing {len(pairs_list):,} pairs using {n_cores} cores with chunk size {chunk_size}...")
@@ -436,51 +515,38 @@ class PoemThresholdSelector:
         plt.close()
 
     def run_threshold_analysis(self, df):
-        timing_logger.start_stage("02_poem_threshold_analysis")
+        self.timing_logger.start_stage("02_poem_threshold_analysis")
 
-        print("=" * 70)
-        print("OPTIMIZED POEM-LEVEL THRESHOLD SELECTION")
-        print("=" * 70)
+        print("Poem level threshold selection")
         print(f"Minimum shared verses: {self.min_shared_verses}")
 
-        print("\nStep 1: Reconstructing poems...")
         poem_to_clusters = self.reconstruct_poems_vectorized(df)
         print(f"  Found {len(poem_to_clusters):,} poems")
 
-        print("\nStep 2: Building inverted index...")
         cluster_to_poems = self.build_inverted_index_fast(poem_to_clusters)
         print(f"  Found {len(cluster_to_poems):,} verse clusters")
 
-        print(f"\nStep 3: Sampling {self.sample_size:,} poems...")
         sample_poems = self.stratified_sample_poems(df, poem_to_clusters)
         print(f"  Sampled {len(sample_poems):,} poems")
 
-        print("\nStep 4: Finding candidate pairs in sample...")
         start_time = time.time()
         candidate_pairs = self.find_candidate_pairs_for_sample(
             sample_poems, poem_to_clusters, cluster_to_poems
         )
         print(f"  Found {len(candidate_pairs):,} candidate pairs in {time.time() - start_time:.1f}s")
 
-        print("\nStep 5: Converting to arrays...")
         poem_to_array = {
             p: np.array(sorted(poem_to_clusters[p]), dtype=np.int32)
             for p in sample_poems
         }
 
-        print(f"\nStep 6: Computing similarities...")
         start_time = time.time()
         similarities_df = self.compute_sample_similarities(candidate_pairs, poem_to_array)
         print(f"  Computed {len(similarities_df):,} similarities in {time.time() - start_time:.1f}s")
 
         similarities_df.to_csv('full_orthographic_results/poem_similarities_sample.csv', index=False)
 
-        print("\nStep 7: Adaptive grid search over thresholds...")
         grid_results = self.grid_search_thresholds(similarities_df, sample_poems, poem_to_array)
-
-        print("\n" + "=" * 70)
-        print("THRESHOLD SELECTION BASED ON QUALITY METRICS")
-        print("=" * 70)
 
         best_result = grid_results.iloc[0]
         threshold = float(best_result['threshold'])
@@ -514,9 +580,5 @@ class PoemThresholdSelector:
         pd.DataFrame([summary]).to_csv('full_orthographic_results/poem_enhanced_threshold_summary.csv', index=False)
         print(f"Summary saved")
 
-        print("\n" + "=" * 70)
-        print("POEM THRESHOLD ANALYSIS COMPLETE")
-        print("=" * 70)
-
-        timing_logger.end_stage()
+        self.timing_logger.end_stage()
         return threshold, grid_results, similarities_df, poem_to_clusters
