@@ -1,6 +1,3 @@
-#%% md
-# 1. DBBE
-#%%
 import re
 import time
 import unicodedata
@@ -14,6 +11,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import adjusted_rand_score, v_measure_score
+
 class TextPreprocessor:
     def __init__(self, lowercase=True, remove_punctuation=True, remove_diacritics=True):
         self.lowercase = lowercase
